@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дата прописью</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .calendar {
+            margin-bottom: 25px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-header button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .calendar-header button:hover {
+            background: #5a6fd6;
+            transform: scale(1.05);
+        }
+
+        .month-year {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: bold;
+            color: #666;
+            padding: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .day {
+            text-align: center;
+            padding: 12px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        .day:hover {
+            background: #e8e8ff;
+            transform: scale(1.1);
+        }
+
+        .day.selected {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .day.today {
+            border: 2px solid #764ba2;
+        }
+
+        .day.other-month {
+            color: #ccc;
+        }
+
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .result-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .result-box {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .result-box:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .result-label {
+            font-size: 0.85em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .result-text {
+            font-size: 1.1em;
+            color: #333;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .result-text:hover {
+            color: #667eea;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .toggle-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .toggle-btn.inactive {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .copy-hint {
+            text-align: center;
+            color: #888;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .copied {
+            animation: flash 0.5s;
+        }
+
+        @keyframes flash {
+            0% { background: #d4edda; }
+            100% { background: white; }
+        }
+
+        .year-selector {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .year-input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .year-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 Дата прописью</h1>
+        
+        <div class="calendar">
+            <div class="calendar-header">
+                <button onclick="changeMonth(-1)">◀</button>
+                <div class="year-selector">
+                    <span class="month-year" id="monthYear"></span>
+                    <input type="number" class="year-input" id="yearInput" min="1" max="9999">
+                </div>
+                <button onclick="changeMonth(1)">▶</button>
+            </div>
+            <div class="weekdays">
+                <div class="weekday">Пн</div>
+                <div class="weekday">Вт</div>
+                <div class="weekday">Ср</div>
+                <div class="weekday">Чт</div>
+                <div class="weekday">Пт</div>
+                <div class="weekday">Сб</div>
+                <div class="weekday">Вс</div>
+            </div>
+            <div class="days" id="daysContainer"></div>
+        </div>
+
+        <div class="controls">
+            <button class="toggle-btn active" id="capitalBtn" onclick="toggleCapital()">
+                <span class="indicator"></span>
+                Первая заглавная: ВКЛ
+            </button>
+        </div>
+
+        <div class="result-section">
+            <h3>📝 Выбранная дата:</h3>
+            
+            <div class="result-box">
+                <div class="result-label">Именительный падеж (что?):</div>
+                <div class="result-text" id="nominative" onclick="copyText(this)">Выберите дату в календаре</div>
+            </div>
+            
+            <div class="result-box">
+                <div class="result-label">Родительный падеж (чего?):</div>
+                <div class="result-text" id="genitive" onclick="copyText(this)">Выберите дату в календаре</div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label">Дательный падеж (чему?):</div>
+                <div class="result-text" id="dative" onclick="copyText(this)">Выберите дату в календаре</div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label">Творительный падеж (чем?):</div>
+                <div class="result-text" id="instrumental" onclick="copyText(this)">Выберите дату в календаре</div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label">Предложный падеж (о чём?):</div>
+                <div class="result-text" id="prepositional" onclick="copyText(this)">Выберите дату в календаре</div>
+            </div>
+            
+            <div class="copy-hint">💡 Нажмите на текст, чтобы скопировать</div>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date();
+        let selectedDate = null;
+        let isCapital = true;
+
+        // Данные для преобразования чисел в слова
+        const units = {
+            nominative: ['', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'],
+            genitive: ['', 'одного', 'двух', 'трёх', 'четырёх', 'пяти', 'шести', 'семи', 'восьми', 'девяти'],
+            dative: ['', 'одному', 'двум', 'трём', 'четырём', 'пяти', 'шести', 'семи', 'восьми', 'девяти'],
+            instrumental: ['', 'одним', 'двумя', 'тремя', 'четырьмя', 'пятью', 'шестью', 'семью', 'восемью', 'девятью'],
+            prepositional: ['', 'одном', 'двух', 'трёх', 'четырёх', 'пяти', 'шести', 'семи', 'восьми', 'девяти']
+        };
+
+        const unitsF = {
+            nominative: ['', 'одна', 'две', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'],
+            genitive: ['', 'одной', 'двух', 'трёх', 'четырёх', 'пяти', 'шести', 'семи', 'восьми', 'девяти'],
+            dative: ['', 'одной', 'двум', 'трём', 'четырём', 'пяти', 'шести', 'семи', 'восьми', 'девяти'],
+            instrumental: ['', 'одной', 'двумя', 'тремя', 'четырьмя', 'пятью', 'шестью', 'семью', 'восемью', 'девятью'],
+            prepositional: ['', 'одной', 'двух', 'трёх', 'четырёх', 'пяти', 'шести', 'семи', 'восьми', 'девяти']
+        };
+
+        const teens = {
+            nominative: ['десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'],
+            genitive: ['десяти', 'одиннадцати', 'двенадцати', 'тринадцати', 'четырнадцати', 'пятнадцати', 'шестнадцати', 'семнадцати', 'восемнадцати', 'девятнадцати'],
+            dative: ['десяти', 'одиннадцати', 'двенадцати', 'тринадцати', 'четырнадцати', 'пятнадцати', 'шестнадцати', 'семнадцати', 'восемнадцати', 'девятнадцати'],
+            instrumental: ['десятью', 'одиннадцатью', 'двенадцатью', 'тринадцатью', 'четырнадцатью', 'пятнадцатью', 'шестнадцатью', 'семнадцатью', 'восемнадцатью', 'девятнадцатью'],
+            prepositional: ['десяти', 'одиннадцати', 'двенадцати', 'тринадцати', 'четырнадцати', 'пятнадцати', 'шестнадцати', 'семнадцати', 'восемнадцати', 'девятнадцати']
+        };
+
+        const tens = {
+            nominative: ['', '', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'],
+            genitive: ['', '', 'двадцати', 'тридцати', 'сорока', 'пятидесяти', 'шестидесяти', 'семидесяти', 'восьмидесяти', 'девяноста'],
+            dative: ['', '', 'двадцати', 'тридцати', 'сорока', 'пятидесяти', 'шестидесяти', 'семидесяти', 'восьмидесяти', 'девяноста'],
+            instrumental: ['', '', 'двадцатью', 'тридцатью', 'сорока', 'пятьюдесятью', 'шестьюдесятью', 'семьюдесятью', 'восемьюдесятью', 'девяноста'],
+            prepositional: ['', '', 'двадцати', 'тридцати', 'сорока', 'пятидесяти', 'шестидесяти', 'семидесяти', 'восьмидесяти', 'девяноста']
+        };
+
+        const hundreds = {
+            nominative: ['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'],
+            genitive: ['', 'ста', 'двухсот', 'трёхсот', 'четырёхсот', 'пятисот', 'шестисот', 'семисот', 'восьмисот', 'девятисот'],
+            dative: ['', 'ста', 'двумстам', 'трёмстам', 'четырёмстам', 'пятистам', 'шестистам', 'семистам', 'восьмистам', 'девятистам'],
+            instrumental: ['', 'ста', 'двумястами', 'тремястами', 'четырьмястами', 'пятьюстами', 'шестьюстами', 'семьюстами', 'восемьюстами', 'девятьюстами'],
+            prepositional: ['', 'ста', 'двухстах', 'трёхстах', 'четырёхстах', 'пятистах', 'шестистах', 'семистах', 'восьмистах', 'девятистах']
+        };
+
+        const thousands = {
+            nominative: { one: 'тысяча', few: 'тысячи', many: 'тысяч' },
+            genitive: { one: 'тысячи', few: 'тысяч', many: 'тысяч' },
+            dative: { one: 'тысяче', few: 'тысячам', many: 'тысячам' },
+            instrumental: { one: 'тысячей', few: 'тысячами', many: 'тысячами' },
+            prepositional: { one: 'тысяче', few: 'тысячах', many: 'тысячах' }
+        };
+
+        // Порядковые числительные для дня
+        const dayOrdinal = {
+            nominative: {
+                units: ['', 'первое', 'второе', 'третье', 'четвёртое', 'пятое', 'шестое', 'седьмое', 'восьмое', 'девятое'],
+                teens: ['десятое', 'одиннадцатое', 'двенадцатое', 'тринадцатое', 'четырнадцатое', 'пятнадцатое', 'шестнадцатое', 'семнадцатое', 'восемнадцатое', 'девятнадцатое'],
+                tens: ['', '', 'двадцатое', 'тридцатое', 'тридцать', '', '', '', '', ''],
+                tensPrefix: ['', '', 'двадцать', 'тридцать', '', '', '', '', '', '']
+            },
+            genitive: {
+                units: ['', 'первого', 'второго', 'третьего', 'четвёртого', 'пятого', 'шестого', 'седьмого', 'восьмого', 'девятого'],
+                teens: ['десятого', 'одиннадцатого', 'двенадцатого', 'тринадцатого', 'четырнадцатого', 'пятнадцатого', 'шестнадцатого', 'семнадцатого', 'восемнадцатого', 'девятнадцатого'],
+                tens: ['', '', 'двадцатого', 'тридцатого', 'тридцать', '', '', '', '', ''],
+                tensPrefix: ['', '', 'двадцать', 'тридцать', '', '', '', '', '', '']
+            },
+            dative: {
+                units: ['', 'первому', 'второму', 'третьему', 'четвёртому', 'пятому', 'шестому', 'седьмому', 'восьмому', 'девятому'],
+                teens: ['десятому', 'одиннадцатому', 'двенадцатому', 'тринадцатому', 'четырнадцатому', 'пятнадцатому', 'шестнадцатому', 'семнадцатому', 'восемнадцатому', 'девятнадцатому'],
+                tens: ['', '', 'двадцатому', 'тридцатому', '', '', '', '', '', ''],
+                tensPrefix: ['', '', 'двадцать', 'тридцать', '', '', '', '', '', '']
+            },
+            instrumental: {
+                units: ['', 'первым', 'вторым', 'третьим', 'четвёртым', 'пятым', 'шестым', 'седьмым', 'восьмым', 'девятым'],
+                teens: ['десятым', 'одиннадцатым', 'двенадцатым', 'тринадцатым', 'четырнадцатым', 'пятнадцатым', 'шестнадцатым', 'семнадцатым', 'восемнадцатым', 'девятнадцатым'],
+                tens: ['', '', 'двадцатым', 'тридцатым', '', '', '', '', '', ''],
+                tensPrefix: ['', '', 'двадцать', 'тридцать', '', '', '', '', '', '']
+            },
+            prepositional: {
+                units: ['', 'первом', 'втором', 'третьем', 'четвёртом', 'пятом', 'шестом', 'седьмом', 'восьмом', 'девятом'],
+                teens: ['десятом', 'одиннадцатом', 'двенадцатом', 'тринадцатом', 'четырнадцатом', 'пятнадцатом', 'шестнадцатом', 'семнадцатом', 'восемнадцатом', 'девятнадцатом'],
+                tens: ['', '', 'двадцатом', 'тридцатом', '', '', '', '', '', ''],
+                tensPrefix: ['', '', 'двадцать', 'тридцать', '', '', '', '', '', '']
+            }
+        };
+
+        // Месяцы
+        const months = {
+            nominative: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'],
+            genitive: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'],
+            dative: ['январю', 'февралю', 'марту', 'апрелю', 'маю', 'июню', 'июлю', 'августу', 'сентябрю', 'октябрю', 'ноябрю', 'декабрю'],
+            instrumental: ['январём', 'февралём', 'мартом', 'апрелем', 'маем', 'июнем', 'июлем', 'августом', 'сентябрём', 'октябрём', 'ноябрём', 'декабрём'],
+            prepositional: ['январе', 'феврале', 'марте', 'апреле', 'мае', 'июне', 'июле', 'августе', 'сентябре', 'октябре', 'ноябре', 'декабре']
+        };
+
+        const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+        function getDayWord(day, caseType) {
+            const data = dayOrdinal[caseType];
+            if (day >= 10 && day <= 19) {
+                return data.teens[day - 10];
+            }
+            const ten = Math.floor(day / 10);
+            const unit = day % 10;
+            if (unit === 0 && ten > 0) {
+                return data.tens[ten];
+            }
+            if (ten > 0) {
+                return data.tensPrefix[ten] + ' ' + data.units[unit];
+            }
+            return data.units[unit];
+        }
+
+        function getThousandForm(num, caseType) {
+            const t = thousands[caseType];
+            if (num % 100 >= 11 && num % 100 <= 19) return t.many;
+            if (num % 10 === 1) return t.one;
+            if (num % 10 >= 2 && num % 10 <= 4) return t.few;
+            return t.many;
+        }
+
+        function getYearWord(year, caseType) {
+            const parts = [];
+            
+            // Тысячи
+            const th = Math.floor(year / 1000);
+            if (th > 0) {
+                if (th === 1) {
+                    parts.push(unitsF[caseType][1]);
+                } else if (th === 2) {
+                    parts.push(unitsF[caseType][2]);
+                } else {
+                    parts.push(unitsF[caseType][th]);
+                }
+                parts.push(getThousandForm(th, caseType));
+            }
+            
+            // Сотни
+            const h = Math.floor((year % 1000) / 100);
+            if (h > 0) {
+                parts.push(hundreds[caseType][h]);
+            }
+            
+            // Десятки и единицы
+            const remainder = year % 100;
+            if (remainder >= 10 && remainder <= 19) {
+                // Для года нужны порядковые числительные
+                const ordinalTeens = {
+                    nominative: ['десятого', 'одиннадцатого', 'двенадцатого', 'тринадцатого', 'четырнадцатого', 'пятнадцатого', 'шестнадцатого', 'семнадцатого', 'восемнадцатого', 'девятнадцатого'],
+                    genitive: ['десятого', 'одиннадцатого', 'двенадцатого', 'тринадцатого', 'четырнадцатого', 'пятнадцатого', 'шестнадцатого', 'семнадцатого', 'восемнадцатого', 'девятнадцатого'],
+                    dative: ['десятому', 'одиннадцатому', 'двенадцатому', 'тринадцатому', 'четырнадцатому', 'пятнадцатому', 'шестнадцатому', 'семнадцатому', 'восемнадцатому', 'девятнадцатому'],
+                    instrumental: ['десятым', 'одиннадцатым', 'двенадцатым', 'тринадцатым', 'четырнадцатым', 'пятнадцатым', 'шестнадцатым', 'семнадцатым', 'восемнадцатым', 'девятнадцатым'],
+                    prepositional: ['десятом', 'одиннадцатом', 'двенадцатом', 'тринадцатом', 'четырнадцатом', 'пятнадцатом', 'шестнадцатом', 'семнадцатом', 'восемнадцатом', 'девятнадцатом']
+                };
+                parts.push(ordinalTeens[caseType][remainder - 10]);
+            } else {
+                const t = Math.floor(remainder / 10);
+                const u = remainder % 10;
+                
+                if (t > 0 && u === 0) {
+                    // Только десятки (20, 30, ...)
+                    const ordinalTens = {
+                        nominative: ['', '', 'двадцатого', 'тридцатого', 'сорокового', 'пятидесятого', 'шестидесятого', 'семидесятого', 'восьмидесятого', 'девяностого'],
+                        genitive: ['', '', 'двадцатого', 'тридцатого', 'сорокового', 'пятидесятого', 'шестидесятого', 'семидесятого', 'восьмидесятого', 'девяностого'],
+                        dative: ['', '', 'двадцатому', 'тридцатому', 'сороковому', 'пятидесятому', 'шестидесятому', 'семидесятому', 'восьмидесятому', 'девяностому'],
+                        instrumental: ['', '', 'двадцатым', 'тридцатым', 'сороковым', 'пятидесятым', 'шестидесятым', 'семидесятым', 'восьмидесятым', 'девяностым'],
+                        prepositional: ['', '', 'двадцатом', 'тридцатом', 'сороковом', 'пятидесятом', 'шестидесятом', 'семидесятом', 'восьмидесятом', 'девяностом']
+                    };
+                    parts.push(ordinalTens[caseType][t]);
+                } else {
+                    if (t > 0) {
+                        parts.push(tens[caseType][t]);
+                    }
+                    if (u > 0) {
+                        const ordinalUnits = {
+                            nominative: ['', 'первого', 'второго', 'третьего', 'четвёртого', 'пятого', 'шестого', 'седьмого', 'восьмого', 'девятого'],
+                            genitive: ['', 'первого', 'второго', 'третьего', 'четвёртого', 'пятого', 'шестого', 'седьмого', 'восьмого', 'девятого'],
+                            dative: ['', 'первому', 'второму', 'третьему', 'четвёртому', 'пятому', 'шестому', 'седьмому', 'восьмому', 'девятому'],
+                            instrumental: ['', 'первым', 'вторым', 'третьим', 'четвёртым', 'пятым', 'шестым', 'седьмым', 'восьмым', 'девятым'],
+                            prepositional: ['', 'первом', 'втором', 'третьем', 'четвёртом', 'пятом', 'шестом', 'седьмом', 'восьмом', 'девятом']
+                        };
+                        parts.push(ordinalUnits[caseType][u]);
+                    } else if (year % 100 === 0 && year % 1000 !== 0) {
+                        // Для круглых сотен (2100, 2200, ...)
+                        // Уже добавлено выше
+                    }
+                }
+            }
+            
+            // Если год кратен 1000 (2000, 3000, ...)
+            if (year % 1000 === 0) {
+                // Убираем последний элемент и добавляем порядковое
+                parts.pop();
+                const ordinalThousand = {
+                    nominative: 'тысячного',
+                    genitive: 'тысячного',
+                    dative: 'тысячному',
+                    instrumental: 'тысячным',
+                    prepositional: 'тысячном'
+                };
+                parts.push(ordinalThousand[caseType]);
+            }
+            
+            return parts.filter(p => p).join(' ');
+        }
+
+        function formatDate(day, month, year, caseType) {
+            const dayWord = getDayWord(day, caseType);
+            const monthWord = months[caseType][month];
+            const yearWord = getYearWord(year, caseType);
+            
+            let yearSuffix = 'года';
+            if (caseType === 'dative') yearSuffix = 'году';
+            else if (caseType === 'instrumental') yearSuffix = 'годом';
+            else if (caseType === 'prepositional') yearSuffix = 'году';
+            
+            let result = `${dayWord} ${monthWord} ${yearWord} ${yearSuffix}`;
+            
+            if (isCapital) {
+                result = result.charAt(0).toUpperCase() + result.slice(1);
+            }
+            
+            return result;
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('monthYear').textContent = `${monthNames[month]} ${year}`;
+            document.getElementById('yearInput').value = year;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = (firstDay.getDay() + 6) % 7;
+            
+            const container = document.getElementById('daysContainer');
+            container.innerHTML = '';
+            
+            const prevMonthLast = new Date(year, month, 0).getDate();
+            for (let i = startDay - 1; i >= 0; i--) {
+                const div = document.createElement('div');
+                div.className = 'day other-month';
+                div.textContent = prevMonthLast - i;
+                const d = prevMonthLast - i;
+                const m = month - 1;
+                const y = m < 0 ? year - 1 : year;
+                const actualMonth = m < 0 ? 11 : m;
+                div.onclick = () => selectDate(d, actualMonth, y);
+                container.appendChild(div);
+            }
+            
+            const today = new Date();
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const div = document.createElement('div');
+                div.className = 'day';
+                div.textContent = i;
+                
+                if (today.getDate() === i && today.getMonth() === month && today.getFullYear() === year) {
+                    div.classList.add('today');
+                }
+                
+                if (selectedDate && selectedDate.day === i && selectedDate.month === month && selectedDate.year === year) {
+                    div.classList.add('selected');
+                }
+                
+                div.onclick = () => selectDate(i, month, year);
+                container.appendChild(div);
+            }
+            
+            const remaining = 42 - container.children.length;
+            for (let i = 1; i <= remaining; i++) {
+                const div = document.createElement('div');
+                div.className = 'day other-month';
+                div.textContent = i;
+                const m = month + 1;
+                const y = m > 11 ? year + 1 : year;
+                const actualMonth = m > 11 ? 0 : m;
+                div.onclick = () => selectDate(i, actualMonth, y);
+                container.appendChild(div);
+            }
+        }
+
+        function selectDate(day, month, year) {
+            selectedDate = { day, month, year };
+            currentDate = new Date(year, month, 1);
+            renderCalendar();
+            updateResults();
+        }
+
+        function updateResults() {
+            if (!selectedDate) return;
+            
+            const { day, month, year } = selectedDate;
+            
+            document.getElementById('nominative').textContent = formatDate(day, month, year, 'nominative');
+            document.getElementById('genitive').textContent = formatDate(day, month, year, 'genitive');
+            document.getElementById('dative').textContent = formatDate(day, month, year, 'dative');
+            document.getElementById('instrumental').textContent = formatDate(day, month, year, 'instrumental');
+            document.getElementById('prepositional').textContent = formatDate(day, month, year, 'prepositional');
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function toggleCapital() {
+            isCapital = !isCapital;
+            const btn = document.getElementById('capitalBtn');
+            btn.className = `toggle-btn ${isCapital ? 'active' : 'inactive'}`;
+            btn.innerHTML = `<span class="indicator"></span> Первая заглавная: ${isCapital ? 'ВКЛ' : 'ВЫКЛ'}`;
+            updateResults();
+        }
+
+        function copyText(element) {
+            const text = element.textContent;
+            if (text === 'Выберите дату в календаре') return;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                element.parentElement.classList.add('copied');
+                setTimeout(() => {
+                    element.parentElement.classList.remove('copied');
+                }, 500);
+            });
+        }
+
+        // Обработчик изменения года
+        document.getElementById('yearInput').addEventListener('change', function() {
+            const year = parseInt(this.value);
+            if (year >= 1 && year <= 9999) {
+                currentDate.setFullYear(year);
+                renderCalendar();
+            }
+        });
+
+        document.getElementById('yearInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.blur();
+            }
+        });
+
+        // Инициализация
+        renderCalendar();
+    </script>
+</body>
+</html>
