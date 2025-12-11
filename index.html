@@ -86,16 +86,10 @@
       margin-top: 10px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
       transition: transform 0.2s;
+      margin: 10px 5px;
     }
     button:hover {
       transform: scale(1.05);
-    }
-    #winner {
-      margin-top: 20px;
-      font-size: 20px;
-      font-weight: bold;
-      color: gold;
-      text-shadow: 0 0 10px white;
     }
   </style>
 </head>
@@ -110,8 +104,6 @@
   <textarea id="names" placeholder="Введите ФИО участников, по одному на строку (минимум 2)"></textarea><br>
   <button onclick="generateWheel()">Создать колесо</button>
   <button onclick="spinWheel()">Крутить колесо!</button>
-
-  <div id="winner"></div>
 
   <script>
     let names = [];
@@ -145,12 +137,11 @@
         label.style.transform = `rotate(${-i * sectorAngle}deg)`;
         label.style.whiteSpace = 'nowrap';
         label.style.maxWidth = '120px';
+        label.style.fontSize = names.length > 8 ? '11px' : '14px';
 
         sector.appendChild(label);
         wheel.appendChild(sector);
       }
-
-      document.getElementById('winner').innerText = '';
     }
 
     function spinWheel() {
@@ -159,25 +150,14 @@
         return;
       }
 
-      // ВСЕГДА ВЫИГРЫВАЕТ ПЕРВЫЙ УЧАСТНИК (как вы просили)
-      const winnerIndex = 0;
-      const winner = names[winnerIndex];
-
-      // Угол, на который нужно повернуть, чтобы первый сектор оказался под стрелкой
-      // Стрелка указывает на 0° (верх), а сектор 0 начинается с 0° и идёт по часовой стрелке
-      // Чтобы сектор 0 оказался под стрелкой, колесо должно повернуться так,
-      // чтобы его середина (sectorAngle / 2) оказалась вверху → поворот = -sectorAngle/2 + 360*k
+      // ВСЕГДА ВЫИГРЫВАЕТ ПЕРВЫЙ УЧАСТНИК
       const sectorAngle = 360 / names.length;
-      const targetAngle = -(sectorAngle / 2); // середина сектора 0
+      const targetAngle = -(sectorAngle / 2); // середина первого сектора под стрелкой
 
       rotation += 3600; // несколько полных оборотов
       const finalRotation = rotation + targetAngle;
 
       document.getElementById('wheel').style.transform = `rotate(${finalRotation}deg)`;
-
-      setTimeout(() => {
-        document.getElementById('winner').innerText = `🏆 Победитель: ${winner}! 🎉`;
-      }, 4100);
     }
   </script>
 </body>
