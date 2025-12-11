@@ -13,14 +13,14 @@
       padding: 20px;
     }
     h1 {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       margin-bottom: 20px;
       text-shadow: 0 0 10px gold;
     }
     #wheel-container {
       position: relative;
-      width: 300px;
-      height: 300px;
+      width: 320px;
+      height: 320px;
       margin: 0 auto 30px;
     }
     #wheel {
@@ -30,19 +30,36 @@
       position: relative;
       transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
       transform: rotate(0deg);
-      background: conic-gradient(
-        #ff4d4d, #ff9933, #ffcc00, #66cc33,
-        #3399ff, #9966ff, #ff4d4d, #ff9933
-      );
+      overflow: hidden;
       box-shadow: 0 0 20px rgba(255,215,0,0.7);
+    }
+    .sector {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      transform-origin: bottom right;
+      left: 0;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-left: 20px;
+      box-sizing: border-box;
+      overflow: hidden;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: white;
+      text-shadow: 1px 1px 2px black;
     }
     #pointer {
       position: absolute;
-      top: -20px;
+      top: -25px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 30px;
+      font-size: 32px;
       color: gold;
+      z-index: 10;
       text-shadow: 0 0 8px white;
     }
     textarea {
@@ -56,9 +73,6 @@
       border: 2px solid gold;
       background: rgba(255,255,255,0.1);
       color: white;
-    }
-    textarea::placeholder {
-      color: #ccc;
     }
     button {
       padding: 12px 30px;
@@ -77,8 +91,8 @@
       transform: scale(1.05);
     }
     #winner {
-      margin-top: 30px;
-      font-size: 24px;
+      margin-top: 20px;
+      font-size: 20px;
       font-weight: bold;
       color: gold;
       text-shadow: 0 0 10px white;
@@ -93,36 +107,74 @@
     <div id="wheel"></div>
   </div>
 
-  <textarea id="names" placeholder="Введите ФИО участников, по одному на строку"></textarea><br>
-  <button onclick="spin()">Крутить колесо!</button>
+  <textarea id="names" placeholder="Введите ФИО участников, по одному на строку (минимум 2)"></textarea><br>
+  <button onclick="generateWheel()">Создать колесо</button>
+  <button onclick="spinWheel()">Крутить колесо!</button>
 
   <div id="winner"></div>
 
   <script>
+    let names = [];
     let rotation = 0;
 
-    function spin() {
+    function generateWheel() {
       const input = document.getElementById('names').value.trim();
-      if (!input) {
-        alert('Пожалуйста, введите хотя бы одного участника!');
+      names = input.split('\n').map(n => n.trim()).filter(n => n);
+      if (names.length < 2) {
+        alert('Нужно минимум 2 участника для колеса!');
         return;
       }
 
-      const names = input.split('\n').map(n => n.trim()).filter(n => n);
+      const wheel = document.getElementById('wheel');
+      wheel.innerHTML = '';
+
+      const sectorAngle = 360 / names.length;
+      const colors = [
+        '#e63946', '#f1faee', '#a8dadc', '#457b9d', '#1d3557',
+        '#ff9e00', '#7209b7', '#3a86ff', '#fb5607', '#8338ec', '#ff006e'
+      ];
+
+      for (let i = 0; i < names.length; i++) {
+        const sector = document.createElement('div');
+        sector.className = 'sector';
+        sector.style.transform = `rotate(${i * sectorAngle}deg)`;
+        sector.style.backgroundColor = colors[i % colors.length];
+
+        const label = document.createElement('div');
+        label.innerText = names[i];
+        label.style.transform = `rotate(${-i * sectorAngle}deg)`;
+        label.style.whiteSpace = 'nowrap';
+        label.style.maxWidth = '120px';
+
+        sector.appendChild(label);
+        wheel.appendChild(sector);
+      }
+
+      document.getElementById('winner').innerText = '';
+    }
+
+    function spinWheel() {
       if (names.length === 0) {
-        alert('Нет корректных имён!');
+        alert('Сначала создайте колесо!');
         return;
       }
 
-      // Выбираем случайного победителя
+      // ВСЕГДА ВЫИГРЫВАЕТ ПЕРВЫЙ УЧАСТНИК (как вы просили)
       const winnerIndex = 0;
       const winner = names[winnerIndex];
 
-      // Анимация вращения
-      rotation += 3600 + Math.random() * 360; // минимум 10 полных оборотов
-      document.getElementById('wheel').style.transform = `rotate(${rotation}deg)`;
+      // Угол, на который нужно повернуть, чтобы первый сектор оказался под стрелкой
+      // Стрелка указывает на 0° (верх), а сектор 0 начинается с 0° и идёт по часовой стрелке
+      // Чтобы сектор 0 оказался под стрелкой, колесо должно повернуться так,
+      // чтобы его середина (sectorAngle / 2) оказалась вверху → поворот = -sectorAngle/2 + 360*k
+      const sectorAngle = 360 / names.length;
+      const targetAngle = -(sectorAngle / 2); // середина сектора 0
 
-      // Выводим победителя через задержку
+      rotation += 3600; // несколько полных оборотов
+      const finalRotation = rotation + targetAngle;
+
+      document.getElementById('wheel').style.transform = `rotate(${finalRotation}deg)`;
+
       setTimeout(() => {
         document.getElementById('winner').innerText = `🏆 Победитель: ${winner}! 🎉`;
       }, 4100);
